@@ -1,0 +1,13 @@
+{
+  "name": "kaarigar-connect",
+  "version": "1.0.0",
+  "description": "KaarigarConnect platform to connect customers with skilled workers in India",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
