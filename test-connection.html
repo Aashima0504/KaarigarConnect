@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supabase Connection Test</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    .status-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      margin-top: 20px;
+      background: #f9f9f9;
+    }
+    .success { color: #2e7d32; font-weight: bold; }
+    .warning { color: #f57c00; font-weight: bold; }
+    .error { color: #c62828; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h1>KaarigarConnect Connection Test</h1>
+  <p>This page tests if the Supabase client is initialized and configured correctly.</p>
+  
+  <div class="status-card">
+    <h3>Client Status:</h3>
+    <div id="client-status">Checking...</div>
+    
+    <h3>API Connection Test:</h3>
+    <div id="connection-status">Pending client initialization...</div>
+  </div>
+
+  <script type="module">
+    import { supabase } from './js/supabase-client.js';
+
+    const clientStatus = document.getElementById('client-status');
+    const connectionStatus = document.getElementById('connection-status');
+
+    if (supabase) {
+      clientStatus.innerHTML = '<span class="success">✓ Client Initialized successfully!</span>';
+      connectionStatus.textContent = 'Attempting to query Supabase API...';
+
+      // Attempt to query an arbitrary table (even if it doesn't exist, we expect a response from Supabase)
+      supabase.from('_connection_test_').select('*').limit(1)
+        .then(({ error }) => {
+          console.log("Supabase API Response:", error);
+          if (error && error.message && (
+            error.message.includes('FetchError') || 
+            error.message.includes('Failed to fetch') || 
+            error.message.includes('fetch') ||
+            error.status === 0
+          )) {
+            connectionStatus.innerHTML = `<span class="error">✗ Failed to reach Supabase API: ${error.message}</span><br>Please verify your internet connection or VITE_SUPABASE_URL.`;
+          } else if (error && error.status === 401) {
+            connectionStatus.innerHTML = `<span class="warning">⚠ API reached, but unauthorized (401).</span><br>This is normal if your VITE_SUPABASE_ANON_KEY is a placeholder or invalid. If you have provided a valid key, please check it.`;
+          } else if (error && error.code === 'PGRST116') {
+            // Table not found or database error, meaning we successfully reached the database!
+            connectionStatus.innerHTML = '<span class="success">✓ Connected successfully!</span><br>API is reachable (database responded).';
+          } else {
+            connectionStatus.innerHTML = '<span class="success">✓ Connected successfully!</span>';
+          }
+        })
+        .catch(err => {
+          connectionStatus.innerHTML = `<span class="error">✗ Connection error: ${err.message}</span>`;
+        });
+    } else {
+      clientStatus.innerHTML = '<span class="error">✗ Failed to initialize client. Check console errors.</span>';
+      connectionStatus.textContent = 'Skipped due to client initialization failure.';
+    }
+  </script>
+</body>
+</html>
